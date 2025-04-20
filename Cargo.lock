@@ -3,14 +3,6 @@
 version = 4
 
 [[package]]
-name = "Daedalus-Machina"
-version = "0.1.0"
-dependencies = [
- "crossterm 0.29.0",
- "ratatui",
-]
-
-[[package]]
 name = "allocator-api2"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -113,6 +105,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acdd7c62a3665c7f6830a51635d9ac9b23ed385797f70a83bb8bafe9c572ab2b"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "daedalus-machina"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.29.0",
+ "ratatui",
 ]
 
 [[package]]
