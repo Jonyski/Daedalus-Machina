@@ -2,7 +2,7 @@ use super::colors;
 use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
     style::{Style, Color},
-    widgets::{Block, Borders, BorderType},
+    widgets::{Block, Borders, BorderType, Paragraph, Padding},
     layout::{Layout, Direction, Constraint},
     Frame,
     prelude::Rect
@@ -44,7 +44,10 @@ impl CommandLine<'_> {
 	}
 
 	pub fn get_command_line<'a>() -> TextArea<'a> {
-		let block = Block::default().borders(Borders::ALL).style(colors::ORANGE);
+		let block = Block::default()
+		                  .borders(Borders::ALL)
+		                  .style(colors::ORANGE)
+		                  .padding(Padding::left(3));
 		let selection_style = Style::default().bg(colors::ORANGE).fg(Color::Black);
 		let mut command_line = TextArea::from([String::from("")]);
 		command_line.set_block(block);
@@ -116,14 +119,22 @@ impl CommandLine<'_> {
 
 	pub fn update_style(&mut self) {
 		if self.active {
-			let block = Block::default().borders(Borders::ALL).style(colors::ORANGE).border_type(BorderType::Rounded);
+			let block = Block::default()
+			                  .borders(Borders::ALL)
+			                  .style(colors::ORANGE)
+			                  .border_type(BorderType::Rounded)
+			                  .padding(Padding::left(3));
 			let style = Style::default().fg(colors::ORANGE);
 			let selection_style = Style::default().bg(colors::ORANGE).fg(Color::Black);
 			self.text_area.set_block(block);
 			self.text_area.set_style(style);
 			self.text_area.set_selection_style(selection_style);
 		} else {
-			let block = Block::default().borders(Borders::ALL).style(colors::LIGHT_YELLOW).border_type(BorderType::Rounded);
+			let block = Block::default()
+			                  .borders(Borders::ALL)
+			                  .style(colors::LIGHT_YELLOW)
+			                  .border_type(BorderType::Rounded)
+			                  .padding(Padding::left(3));
 			let style = Style::default().fg(colors::LIGHT_YELLOW);
 			let selection_style = Style::default().bg(colors::LIGHT_YELLOW).fg(Color::Black);
 			self.text_area.set_block(block);
@@ -132,10 +143,15 @@ impl CommandLine<'_> {
 		}
 	}
 
+	fn get_icon<'a>() -> Paragraph<'a> {
+		Paragraph::new("  >")
+	}
+
 	pub fn draw(&mut self, frame: &mut Frame, container: Rect) {
 		let enclosure_layout = CommandLine::<'_>::get_command_line_enclosure_layout().split(container);
 		let layout = CommandLine::<'_>::get_command_line_layout().split(enclosure_layout[1]);
 		self.update_style();
+		frame.render_widget(CommandLine::<'_>::get_icon(), super::center_vertical(layout[1], 1)) ;
 		frame.render_widget(&self.text_area, layout[1]);
 	}
 }
