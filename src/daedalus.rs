@@ -24,21 +24,20 @@
 //|_____/ \_||_|\____)____|\_||_|_|\____(___/   |_||_||_|\_||_|\____)_| |_|_|_| |_|\_||_|
                                                                                        
 mod menu;
+mod nav;
+mod command_line;
 
+use command_line::CommandLine as cl;
+use ratatui::crossterm::event::{self, KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
     widgets::{Block, Borders, Paragraph},
     style::{Style, Color},
-    layout::{Layout, Direction, Constraint, Flex, Rect},
-    text::{Line},
+    layout::{Layout, Constraint, Flex, Rect},
     Frame,
 };
-use std::rc::Rc;
 use std::io;
-use std::vec;
+use tui_textarea::TextArea;
 
-type NavItem = (Paragraph<'static>, Line<'static>);
-
-// The context in which the dungeon master is immersed
 #[allow(non_camel_case_types)]
 #[derive(Default)]
 #[derive(PartialEq)]
@@ -56,20 +55,31 @@ enum Module {
     MENU
 }
 
-#[derive(Default)]
-pub struct Daedalus {
+pub struct Daedalus<'a> {
     context: Context,
-    active_module: Module
+    active_module: Module,
+    last_key: Option<KeyEvent>,
+    command_line: cl<'a>,
+    nav: Vec<nav::NavItem>
 }
 
-impl Daedalus {
+impl Daedalus<'_> {
+    pub fn init() -> Self {
+        Self {
+            context: Context::MAIN_MENU,
+            active_module: Module::MENU,
+            last_key: None,
+            command_line: cl::init(),
+            nav: nav::get_nav()
+        }
+    }
+
     pub fn draw(&mut self, frame: &mut Frame) {
-        let daedalus_layout = menu::get_daedalus_layout().split(frame.area());;
-        let nav_layout = get_nav_layout().split(daedalus_layout[0]);
-        let nav = get_nav();
-        let command_line_enclosure_layout = get_command_line_enclosure_layout().split(daedalus_layout[1]);
-        let command_line_layout = get_command_line_layout().split(command_line_enclosure_layout[1]);
-        let command_line = get_command_line(Color::Rgb(255, 225, 150));
+        let daedalus_layout = menu::get_daedalus_layout().split(frame.area());
+        let nav_layout = nav::get_nav_layout().split(daedalus_layout[0]);
+        let nav = nav::get_nav();
+        let command_line_enclosure_layout = cl::get_command_line_enclosure_layout().split(daedalus_layout[1]);
+        let command_line_layout = cl::get_command_line_layout().split(command_line_enclosure_layout[1]);
 
         for (i, nav_item) in nav.into_iter().enumerate() {
             let position = center(nav_layout[i*2 + 1], Constraint::Length(nav_item.1.width() as u16), Constraint::Length(1));
@@ -89,30 +99,40 @@ impl Daedalus {
             frame.render_widget(help, menu_layout[3]);
         }
 
-        frame.render_widget(command_line, command_line_layout[1]);
+        frame.render_widget(&self.command_line.text_area, command_line_layout[1]);
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
+    pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
+        if self.command_line.active {
+            return self.command_line.handle_event(key)
+        }
+        self.last_key = Some(key);
         Ok(())
     }
 
+    pub fn get_last_key(& self) -> KeyEvent {
+        if self.last_key != None {
+            return self.last_key.expect("REASON")
+        }
+        KeyEvent::new(KeyCode::Null, KeyModifiers::NONE)
+    }
 }
 
-fn center_horizontal(area: Rect, width: u16) -> Rect {
+pub fn center_horizontal(area: Rect, width: u16) -> Rect {
     let [area] = Layout::horizontal([Constraint::Length(width)])
         .flex(Flex::Center)
         .areas(area);
     area
 }
 
-fn center_vertical(area: Rect, height: u16) -> Rect {
+pub fn center_vertical(area: Rect, height: u16) -> Rect {
     let [area] = Layout::vertical([Constraint::Length(height)])
         .flex(Flex::Center)
         .areas(area);
     area
 }
 
-fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
+pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
     let [area] = Layout::horizontal([horizontal])
         .flex(Flex::Center)
         .areas(area);
@@ -122,65 +142,6 @@ fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
 
 pub fn get_container<'a>(color: Color) -> Paragraph<'a> {
     Paragraph::new("")
-              .block(Block::new().borders(Borders::ALL))
-              .style(Style::default().fg(color))
-}
-
-pub fn create_nav_item(label: String, color: Color) -> NavItem {
-    (Paragraph::new("")
-              .centered()
-              .block(Block::new().borders(Borders::ALL ^ Borders::RIGHT))
-              .style(Style::default().fg(color)),
-    Line::raw(label).style(Style::default().fg(color)))
-}
-
-pub fn get_nav_layout() -> Layout {
-    Layout::default()
-           .direction(Direction::Vertical)
-           .constraints([
-            Constraint::Percentage(6),
-            Constraint::Percentage(16),
-            Constraint::Percentage(2),
-            Constraint::Percentage(16),
-            Constraint::Percentage(2),
-            Constraint::Percentage(16),
-            Constraint::Percentage(2),
-            Constraint::Percentage(16),
-            Constraint::Percentage(2),
-            Constraint::Percentage(16),
-            Constraint::Percentage(6)
-           ])
-}
-
-pub fn get_nav() -> Vec<NavItem> {
-    vec![create_nav_item(String::from("Fichas"), Color::Rgb(111, 16, 235)),
-         create_nav_item(String::from("Dados"), Color::Rgb(111, 99, 242)),
-         create_nav_item(String::from("Itens"), Color::Rgb(79, 240, 237)),
-         create_nav_item(String::from("Notas"), Color::Rgb(233, 237, 119)),
-         create_nav_item(String::from("Mundo"), Color::Rgb(242, 58, 58))]
-}
-
-pub fn get_command_line_enclosure_layout() -> Layout {
-    Layout::default()
-           .direction(Direction::Vertical)
-           .constraints([
-              Constraint::Min(0),
-              Constraint::Length(3)
-           ])
-}
-
-pub fn get_command_line_layout() -> Layout {
-    Layout::default()
-           .direction(Direction::Horizontal)
-           .constraints([
-                Constraint::Length(3),
-                Constraint::Min(0),
-                Constraint::Length(3)
-            ])
-}
-
-pub fn get_command_line<'a>(color: Color) -> Paragraph<'a> {
-    Paragraph::new(">")
               .block(Block::new().borders(Borders::ALL))
               .style(Style::default().fg(color))
 }

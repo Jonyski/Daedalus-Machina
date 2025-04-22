@@ -1,0 +1,114 @@
+use ratatui::crossterm::event::{self, KeyEvent, KeyCode, KeyModifiers};
+use ratatui::{
+    widgets::{Block, Borders, Paragraph},
+    text::{Line},
+    style::{Style, Color, Modifier},
+    layout::{Layout, Direction, Constraint}
+};
+use tui_textarea::{TextArea, CursorMove};
+use std::io;
+
+
+pub struct CommandLine<'a> {
+	pub active: bool,
+	pub text_area: TextArea<'a>
+}
+
+impl CommandLine<'_> {
+	pub fn init() -> Self {
+		Self {
+			active: true,
+			text_area: Self::get_command_line(Color::Rgb(255, 225, 150))
+		}
+	}
+
+	pub fn get_command_line_enclosure_layout() -> Layout {
+	    Layout::default()
+	           .direction(Direction::Vertical)
+	           .constraints([
+	              Constraint::Min(0),
+	              Constraint::Length(3)
+	           ])
+	}
+
+	pub fn get_command_line_layout() -> Layout {
+	    Layout::default()
+	           .direction(Direction::Horizontal)
+	           .constraints([
+	                Constraint::Percentage(10),
+	                Constraint::Min(0),
+	                Constraint::Percentage(10)
+	            ])
+	}
+
+	pub fn get_command_line<'a>(color: Color) -> TextArea<'a> {
+		let block = Block::default().borders(Borders::ALL);
+		let selection_style = Style::default().bg(Color::Rgb(255, 225, 150)).fg(Color::Black);
+		let mut command_line = TextArea::from([String::from("")]);
+		command_line.set_block(block);
+		command_line.set_selection_style(selection_style);
+		command_line.set_cursor_line_style(Style::default());
+		command_line
+	}
+
+	pub fn handle_event(&mut self, key: KeyEvent) -> io::Result<()> {
+		let mut result = io::Result::Ok(());
+		if self.text_area.selection_range() == None
+		   || key.modifiers.bits() == KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
+		   && key.modifiers == KeyModifiers::SHIFT {
+			self.text_area.start_selection();
+		}
+
+		if key.modifiers !=  KeyModifiers::CONTROL
+		   && key.modifiers.bits() != KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits() {
+			result = self.handle_text_event(key);
+		} else {
+			result = self.handle_shortcut_event(key);
+		}
+
+		if key.modifiers != KeyModifiers::SHIFT 
+		   && key.modifiers.bits() != KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
+		   && (key.modifiers != KeyModifiers::CONTROL && key.code != KeyCode::Char('a'))
+		   && (key.modifiers != KeyModifiers::SHIFT && (key.code != KeyCode::Left && key.code != KeyCode::Left)){
+			self.text_area.cancel_selection();
+		}
+
+		result
+	}
+
+	fn handle_text_event(&mut self, key: KeyEvent) -> io::Result<()> {
+		match key.code {
+			KeyCode::Char(c) => {self.text_area.input(key);},
+			KeyCode::Enter => {
+				self.text_area.delete_line_by_end();
+				self.text_area.delete_line_by_head();
+			},
+			KeyCode::Backspace => {self.text_area.delete_char();},
+			KeyCode::Left => {self.text_area.move_cursor(CursorMove::Back);},
+			KeyCode::Right => {self.text_area.move_cursor(CursorMove::Forward);},
+			KeyCode::Esc => self.active = !self.active,
+			_ => return Ok(())
+		}
+		Ok(())
+	}
+
+	fn handle_shortcut_event(&mut self, key: KeyEvent) -> io::Result<()> {
+		match key.code {
+			KeyCode::Char('c') => {self.text_area.copy();},
+			KeyCode::Char('x') => {self.text_area.cut();},
+			KeyCode::Char('v') => {self.text_area.paste();},
+			KeyCode::Char('z') => {self.text_area.undo();},
+			KeyCode::Char('y') => {self.text_area.redo();},
+			KeyCode::Char('a') => {self.text_area.select_all();},
+			KeyCode::Char('d') => {self.text_area.cancel_selection();},
+			KeyCode::Char('p') => {
+				self.text_area.move_cursor(CursorMove::WordBack);
+				self.text_area.delete_next_word();}
+			KeyCode::Delete => {self.text_area.delete_next_word();},
+			KeyCode::Left => {self.text_area.move_cursor(CursorMove::WordBack);},
+			KeyCode::Right => {self.text_area.move_cursor(CursorMove::WordEnd);},
+			_ => return Ok(())
+		}
+		Ok(())
+	}
+}
