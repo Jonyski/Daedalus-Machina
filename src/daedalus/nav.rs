@@ -1,3 +1,4 @@
+use super::colors;
 use ratatui::{
     widgets::{Block, Borders, Paragraph, BorderType},
     style::{Style, Color},
@@ -35,9 +36,9 @@ pub fn get_nav_layout() -> Layout {
 }
 
 pub fn get_nav() -> Vec<NavItem> {
-    vec![create_nav_item(String::from("Fichas"), Color::Rgb(111, 16, 235)),
-         create_nav_item(String::from("Dados"), Color::Rgb(111, 99, 242)),
-         create_nav_item(String::from("Itens"), Color::Rgb(79, 240, 237)),
-         create_nav_item(String::from("Notas"), Color::Rgb(233, 237, 119)),
-         create_nav_item(String::from("Mundo"), Color::Rgb(242, 58, 58))]
+    vec![create_nav_item(String::from("Fichas"), colors::PURPLE),
+         create_nav_item(String::from("Dados"), colors::BLUE),
+         create_nav_item(String::from("Itens"), colors::CYAN),
+         create_nav_item(String::from("Notas"), colors::YELLOW),
+         create_nav_item(String::from("Mundo"), colors::RED)]
 }

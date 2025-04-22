@@ -1,8 +1,8 @@
-use ratatui::crossterm::event::{self, KeyEvent, KeyCode, KeyModifiers};
+use super::colors;
+use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
-    widgets::{Block, Borders, Paragraph, BorderType},
-    text::{Line},
-    style::{Style, Color, Modifier},
+    style::{Style, Color},
+    widgets::{Block, Borders, BorderType},
     layout::{Layout, Direction, Constraint}
 };
 use tui_textarea::{TextArea, CursorMove};
@@ -18,7 +18,7 @@ impl CommandLine<'_> {
 	pub fn init() -> Self {
 		Self {
 			active: true,
-			text_area: Self::get_command_line(Color::Rgb(255, 225, 150))
+			text_area: Self::get_command_line()
 		}
 	}
 
@@ -41,9 +41,9 @@ impl CommandLine<'_> {
 	            ])
 	}
 
-	pub fn get_command_line<'a>(color: Color) -> TextArea<'a> {
-		let block = Block::default().borders(Borders::ALL).style(Color::Rgb(255, 225, 150));
-		let selection_style = Style::default().bg(Color::Rgb(255, 225, 150)).fg(Color::Black);
+	pub fn get_command_line<'a>() -> TextArea<'a> {
+		let block = Block::default().borders(Borders::ALL).style(colors::ORANGE);
+		let selection_style = Style::default().bg(colors::ORANGE).fg(Color::Black);
 		let mut command_line = TextArea::from([String::from("")]);
 		command_line.set_block(block);
 		command_line.set_selection_style(selection_style);
@@ -52,7 +52,7 @@ impl CommandLine<'_> {
 	}
 
 	pub fn handle_event(&mut self, key: KeyEvent) -> io::Result<()> {
-		let mut result = io::Result::Ok(());
+		let result;
 		if (self.text_area.selection_range() == None)
 		   && (key.modifiers.bits() == KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
 		   || key.modifiers == KeyModifiers::SHIFT) {
@@ -78,7 +78,7 @@ impl CommandLine<'_> {
 
 	fn handle_text_event(&mut self, key: KeyEvent) -> io::Result<()> {
 		match key.code {
-			KeyCode::Char(c) => {self.text_area.input(key);},
+			KeyCode::Char(_) => {self.text_area.input(key);},
 			KeyCode::Enter => {
 				self.text_area.delete_line_by_end();
 				self.text_area.delete_line_by_head();
@@ -113,17 +113,17 @@ impl CommandLine<'_> {
 	}
 
 	pub fn update_style(&mut self) {
-		if(self.active) {
-			let block = Block::default().borders(Borders::ALL).style(Color::Rgb(255, 150, 100)).border_type(BorderType::Rounded);
-			let style = Style::default().fg(Color::Rgb(255, 150, 100));
-			let selection_style = Style::default().bg(Color::Rgb(255, 150, 100)).fg(Color::Black);
+		if self.active {
+			let block = Block::default().borders(Borders::ALL).style(colors::ORANGE).border_type(BorderType::Rounded);
+			let style = Style::default().fg(colors::ORANGE);
+			let selection_style = Style::default().bg(colors::ORANGE).fg(Color::Black);
 			self.text_area.set_block(block);
 			self.text_area.set_style(style);
 			self.text_area.set_selection_style(selection_style);
 		} else {
-			let block = Block::default().borders(Borders::ALL).style(Color::Rgb(255, 225, 150)).border_type(BorderType::Rounded);
-			let style = Style::default().fg(Color::Rgb(255, 225, 150));
-			let selection_style = Style::default().bg(Color::Rgb(255, 225, 150)).fg(Color::Black);
+			let block = Block::default().borders(Borders::ALL).style(colors::LIGHT_YELLOW).border_type(BorderType::Rounded);
+			let style = Style::default().fg(colors::LIGHT_YELLOW);
+			let selection_style = Style::default().bg(colors::LIGHT_YELLOW).fg(Color::Black);
 			self.text_area.set_block(block);
 			self.text_area.set_style(style);
 			self.text_area.set_selection_style(selection_style);

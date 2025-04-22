@@ -1,5 +1,6 @@
+use super::colors;
 use ratatui::{
-    style::{Style, Stylize, Color},
+    style::{Style, Stylize},
     text::{Line},
     widgets::{Paragraph},
     layout::{Layout, Direction, Constraint}
@@ -37,25 +38,25 @@ pub fn get_title<'a>() -> Paragraph<'a> {
     Paragraph::new(vec![l1, l2, l3, l4, l5, l6])
               .bold()
               .centered()
-              .style(Style::default().fg(Color::Rgb(255, 225, 150)))
+              .style(Style::default().fg(colors::LIGHT_YELLOW))
 }
 
 pub fn get_subtitle<'a>() -> Paragraph<'a> {
     Paragraph::new(Line::raw("O GRIMÓRIO INFINITO DOS MESTRES")
                         .bold()
                         .centered()
-                        .style(Style::default().fg(Color::Rgb(255, 150, 100))))
+                        .style(Style::default().fg(colors::ORANGE)))
 }
 
 pub fn get_help<'a>() -> Paragraph<'a> {
-    let l1 = Line::raw("help").style(Style::default().fg(Color::Rgb(255, 64, 32)));
-    let l3 = Line::raw("esc: inserir comando    ").style(Style::default().fg(Color::Rgb(200, 200, 200)));
-    let l4 = Line::raw("f1: fichas de personagem").style(Style::default().fg(Color::Rgb(200, 200, 200)));
-    let l5 = Line::raw("f2: rolagem de dados    ").style(Style::default().fg(Color::Rgb(200, 200, 200)));
-    let l6 = Line::raw("f3: catálogo de itens   ").style(Style::default().fg(Color::Rgb(200, 200, 200)));
-    let l7 = Line::raw("f4: anotações           ").style(Style::default().fg(Color::Rgb(200, 200, 200)));
-    let l8 = Line::raw("f5: construção de mundo ").style(Style::default().fg(Color::Rgb(200, 200, 200)));
-    let l2 = Line::raw("q: quit                 ").style(Style::default().fg(Color::Rgb(200, 200, 200)));
+    let l1 = Line::raw("help").style(Style::default().fg(colors::DISCRETE_RED));
+    let l3 = Line::raw("esc: inserir comando    ").style(Style::default().fg(colors::GREY_RED));
+    let l4 = Line::raw("f1: fichas de personagem").style(Style::default().fg(colors::GREY_RED));
+    let l5 = Line::raw("f2: rolagem de dados    ").style(Style::default().fg(colors::GREY_RED));
+    let l6 = Line::raw("f3: catálogo de itens   ").style(Style::default().fg(colors::GREY_RED));
+    let l7 = Line::raw("f4: anotações           ").style(Style::default().fg(colors::GREY_RED));
+    let l8 = Line::raw("f5: construção de mundo ").style(Style::default().fg(colors::GREY_RED));
+    let l2 = Line::raw("q: quit                 ").style(Style::default().fg(colors::GREY_RED));
 
     Paragraph::new(vec![l1, l2, l3, l4, l5, l6, l7, l8]).centered()
 }

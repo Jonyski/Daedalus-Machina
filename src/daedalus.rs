@@ -1,42 +1,17 @@
-                                                          
-// ____            _     _            _____         _   _         
-//|    \ ___ ___ _| |___| |_ _ ___   |     |___ ___| |_|_|___ ___ 
-//|  |  | .'| -_| . | .'| | | |_ -|  | | | | .'|  _|   | |   | -_|
-//|____/|__,|___|___|__,|_|___|___|  |_|_|_|__,|___|_|_|_|_|_|___|         
-//
-
-
-// ____                        __            ___                                                  __                            
-///\  _`\                     /\ \          /\_ \                        /'\_/`\                 /\ \      __                   
-//\ \ \/\ \     __       __   \_\ \     __  \//\ \    __  __    ____    /\      \     __      ___\ \ \___ /\_\    ___      __   
-// \ \ \ \ \  /'__`\   /'__`\ /'_` \  /'__`\  \ \ \  /\ \/\ \  /',__\   \ \ \__\ \  /'__`\   /'___\ \  _ `\/\ \ /' _ `\  /'__`\ 
-//  \ \ \_\ \/\ \L\.\_/\  __//\ \L\ \/\ \L\.\_ \_\ \_\ \ \_\ \/\__, `\   \ \ \_/\ \/\ \L\.\_/\ \__/\ \ \ \ \ \ \/\ \/\ \/\  __/ 
-//   \ \____/\ \__/.\_\ \____\ \___,_\ \__/.\_\/\____\\ \____/\/\____/    \ \_\\ \_\ \__/.\_\ \____\\ \_\ \_\ \_\ \_\ \_\ \____\
-//    \/___/  \/__/\/_/\/____/\/__,_ /\/__/\/_/\/____/ \/___/  \/___/      \/_/ \/_/\/__/\/_/\/____/ \/_/\/_/\/_/\/_/\/_/\/____/
-//                                                                                                                              
-
-
-// _____                 _       _               ______              _     _             
-//(____ \               | |     | |             |  ___ \            | |   (_)            
-// _   \ \ ____  ____ __| | ____| |_   _  ___   | | _ | | ____  ____| |__  _ ____   ____ 
-//| |   | / _  |/ ___) _| |/ _  | | | | |/___)  | || || |/ _  |/ ___)  _ \| |  _ \ / _  |
-//| |__/ ( ( | (  ___)(_| ( ( | | | |_| |___ |  | || || ( ( | ( (___| | | | | | | ( ( | | 
-//|_____/ \_||_|\____)____|\_||_|_|\____(___/   |_||_||_|\_||_|\____)_| |_|_|_| |_|\_||_|
-                                                                                       
 mod menu;
 mod nav;
 mod command_line;
+mod colors;
 
 use command_line::CommandLine as cl;
-use ratatui::crossterm::event::{self, KeyEvent, KeyCode, KeyModifiers};
+use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
     widgets::{Block, Borders, Paragraph, BorderType},
-    style::{Style, Color},
+    style::{Color},
     layout::{Layout, Constraint, Flex, Rect},
     Frame,
 };
 use std::io;
-use tui_textarea::TextArea;
 
 #[allow(non_camel_case_types)]
 #[derive(Default)]
@@ -52,9 +27,15 @@ enum Context {
 #[derive(PartialEq)]
 enum Module {
     #[default]
-    MENU
+    MENU,
+    SHEET,
+    DICE,
+    ITEM,
+    NOTES,
+    WORLD
 }
 
+#[allow(dead_code)]
 pub struct Daedalus<'a> {
     context: Context,
     active_module: Module,
@@ -89,7 +70,7 @@ impl Daedalus<'_> {
 
         if self.active_module == Module::MENU {
             let menu_layout = menu::get_menu_layout().split(daedalus_layout[1]);
-            let container = get_container(Color::Rgb(255, 225, 150));
+            let container = get_container(colors::LIGHT_YELLOW);
             let title = menu::get_title();
             let subtitle = menu::get_subtitle();
             let help = menu::get_help();
@@ -99,19 +80,28 @@ impl Daedalus<'_> {
             frame.render_widget(help, menu_layout[3]);
         }
 
-        // rendering the command line
         self.command_line.update_style();
         frame.render_widget(&self.command_line.text_area, command_line_layout[1]);
     }
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
+        let mut result = io::Result::Ok(());
         if self.command_line.active {
-            return self.command_line.handle_event(key)
-        }
+            result = self.command_line.handle_event(key);
+            match key.code {
+                KeyCode::F(1) => {self.active_module = Module::SHEET;},
+                KeyCode::F(2) => {self.active_module = Module::DICE;},
+                KeyCode::F(3) => {self.active_module = Module::ITEM;},
+                KeyCode::F(4) => {self.active_module = Module::NOTES;},
+                KeyCode::F(5) => {self.active_module = Module::WORLD;},
+                _ => {result = Ok(());}
+            }
+        } 
         self.last_key = Some(key);
-        Ok(())
+        result
     }
 
+    #[allow(dead_code)]
     pub fn get_last_key(& self) -> KeyEvent {
         if self.last_key != None {
             return self.last_key.expect("REASON")
@@ -120,6 +110,7 @@ impl Daedalus<'_> {
     }
 }
 
+#[allow(dead_code)]
 pub fn center_horizontal(area: Rect, width: u16) -> Rect {
     let [area] = Layout::horizontal([Constraint::Length(width)])
         .flex(Flex::Center)
@@ -127,6 +118,7 @@ pub fn center_horizontal(area: Rect, width: u16) -> Rect {
     area
 }
 
+#[allow(dead_code)]
 pub fn center_vertical(area: Rect, height: u16) -> Rect {
     let [area] = Layout::vertical([Constraint::Length(height)])
         .flex(Flex::Center)
