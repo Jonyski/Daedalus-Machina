@@ -3,7 +3,9 @@ use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
     style::{Style, Color},
     widgets::{Block, Borders, BorderType},
-    layout::{Layout, Direction, Constraint}
+    layout::{Layout, Direction, Constraint},
+    Frame,
+    prelude::Rect
 };
 use tui_textarea::{TextArea, CursorMove};
 use std::io;
@@ -128,5 +130,12 @@ impl CommandLine<'_> {
 			self.text_area.set_style(style);
 			self.text_area.set_selection_style(selection_style);
 		}
+	}
+
+	pub fn draw(&mut self, frame: &mut Frame, container: Rect) {
+		let enclosure_layout = CommandLine::<'_>::get_command_line_enclosure_layout().split(container);
+		let layout = CommandLine::<'_>::get_command_line_layout().split(enclosure_layout[1]);
+		self.update_style();
+		frame.render_widget(&self.text_area, layout[1]);
 	}
 }

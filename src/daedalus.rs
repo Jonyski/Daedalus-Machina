@@ -41,7 +41,6 @@ pub struct Daedalus<'a> {
     active_module: Module,
     last_key: Option<KeyEvent>,
     pub command_line: cl<'a>,
-    nav: Vec<nav::NavItem>
 }
 
 impl Daedalus<'_> {
@@ -50,23 +49,14 @@ impl Daedalus<'_> {
             context: Context::MAIN_MENU,
             active_module: Module::MENU,
             last_key: None,
-            command_line: cl::init(),
-            nav: nav::get_nav()
+            command_line: cl::init()
         }
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
         let daedalus_layout = menu::get_daedalus_layout().split(frame.area());
-        let nav_layout = nav::get_nav_layout().split(daedalus_layout[0]);
-        let nav = nav::get_nav();
-        let command_line_enclosure_layout = cl::get_command_line_enclosure_layout().split(daedalus_layout[1]);
-        let command_line_layout = cl::get_command_line_layout().split(command_line_enclosure_layout[1]);
 
-        for (i, nav_item) in nav.into_iter().enumerate() {
-            let position = center(nav_layout[i*2 + 1], Constraint::Length(nav_item.1.width() as u16), Constraint::Length(1));
-            frame.render_widget(nav_item.0, nav_layout[i*2 + 1]);
-            frame.render_widget(nav_item.1, position);
-        }
+        nav::draw(frame, daedalus_layout[0]);
 
         if self.active_module == Module::MENU {
             let menu_layout = menu::get_menu_layout().split(daedalus_layout[1]);
@@ -80,8 +70,7 @@ impl Daedalus<'_> {
             frame.render_widget(help, menu_layout[3]);
         }
 
-        self.command_line.update_style();
-        frame.render_widget(&self.command_line.text_area, command_line_layout[1]);
+        self.command_line.draw(frame, daedalus_layout[1]);
     }
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {

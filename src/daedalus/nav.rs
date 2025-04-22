@@ -3,7 +3,9 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, BorderType},
     style::{Style, Color},
     layout::{Layout, Direction, Constraint},
-    text::{Line}
+    text::{Line},
+    Frame,
+    prelude::Rect
 };
 use std::vec;
 
@@ -41,4 +43,14 @@ pub fn get_nav() -> Vec<NavItem> {
          create_nav_item(String::from("Itens"), colors::CYAN),
          create_nav_item(String::from("Notas"), colors::YELLOW),
          create_nav_item(String::from("Mundo"), colors::RED)]
+}
+
+pub fn draw(frame: &mut Frame, container: Rect) {
+    let nav = get_nav();
+    let layout = get_nav_layout().split(container);
+    for (i, nav_item) in nav.into_iter().enumerate() {
+        let position = super::center(layout[i*2 + 1], Constraint::Length(nav_item.1.width() as u16), Constraint::Length(1));
+        frame.render_widget(nav_item.0, layout[i*2 + 1]);
+        frame.render_widget(nav_item.1, position);
+    }
 }
