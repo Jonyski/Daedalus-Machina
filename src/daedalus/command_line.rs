@@ -1,6 +1,6 @@
 use ratatui::crossterm::event::{self, KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, BorderType},
     text::{Line},
     style::{Style, Color, Modifier},
     layout::{Layout, Direction, Constraint}
@@ -42,7 +42,7 @@ impl CommandLine<'_> {
 	}
 
 	pub fn get_command_line<'a>(color: Color) -> TextArea<'a> {
-		let block = Block::default().borders(Borders::ALL);
+		let block = Block::default().borders(Borders::ALL).style(Color::Rgb(255, 225, 150));
 		let selection_style = Style::default().bg(Color::Rgb(255, 225, 150)).fg(Color::Black);
 		let mut command_line = TextArea::from([String::from("")]);
 		command_line.set_block(block);
@@ -53,9 +53,9 @@ impl CommandLine<'_> {
 
 	pub fn handle_event(&mut self, key: KeyEvent) -> io::Result<()> {
 		let mut result = io::Result::Ok(());
-		if self.text_area.selection_range() == None
-		   || key.modifiers.bits() == KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
-		   && key.modifiers == KeyModifiers::SHIFT {
+		if (self.text_area.selection_range() == None)
+		   && (key.modifiers.bits() == KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
+		   || key.modifiers == KeyModifiers::SHIFT) {
 			self.text_area.start_selection();
 		}
 
@@ -86,7 +86,7 @@ impl CommandLine<'_> {
 			KeyCode::Backspace => {self.text_area.delete_char();},
 			KeyCode::Left => {self.text_area.move_cursor(CursorMove::Back);},
 			KeyCode::Right => {self.text_area.move_cursor(CursorMove::Forward);},
-			KeyCode::Esc => self.active = !self.active,
+			KeyCode::Esc => self.active = false,
 			_ => return Ok(())
 		}
 		Ok(())
@@ -106,9 +106,27 @@ impl CommandLine<'_> {
 				self.text_area.delete_next_word();}
 			KeyCode::Delete => {self.text_area.delete_next_word();},
 			KeyCode::Left => {self.text_area.move_cursor(CursorMove::WordBack);},
-			KeyCode::Right => {self.text_area.move_cursor(CursorMove::WordEnd);},
+			KeyCode::Right => {self.text_area.move_cursor(CursorMove::WordForward);},
 			_ => return Ok(())
 		}
 		Ok(())
+	}
+
+	pub fn update_style(&mut self) {
+		if(self.active) {
+			let block = Block::default().borders(Borders::ALL).style(Color::Rgb(255, 150, 100)).border_type(BorderType::Rounded);
+			let style = Style::default().fg(Color::Rgb(255, 150, 100));
+			let selection_style = Style::default().bg(Color::Rgb(255, 150, 100)).fg(Color::Black);
+			self.text_area.set_block(block);
+			self.text_area.set_style(style);
+			self.text_area.set_selection_style(selection_style);
+		} else {
+			let block = Block::default().borders(Borders::ALL).style(Color::Rgb(255, 225, 150)).border_type(BorderType::Rounded);
+			let style = Style::default().fg(Color::Rgb(255, 225, 150));
+			let selection_style = Style::default().bg(Color::Rgb(255, 225, 150)).fg(Color::Black);
+			self.text_area.set_block(block);
+			self.text_area.set_style(style);
+			self.text_area.set_selection_style(selection_style);
+		}
 	}
 }

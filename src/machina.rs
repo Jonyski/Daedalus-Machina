@@ -34,9 +34,14 @@ impl Machina<'_> {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
-        match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            _ => self.daedalus.handle_key_event(key_event).expect("key event handled")
+        if self.daedalus.command_line.active {
+            self.daedalus.handle_key_event(key_event).expect("key event handled")
+        } else {
+            match key_event.code {
+                KeyCode::Char('q') => self.exit(),
+                KeyCode::Esc => self.daedalus.command_line.active = true,
+                _ => self.daedalus.handle_key_event(key_event).expect("key event handled")
+            }
         }
     }
 

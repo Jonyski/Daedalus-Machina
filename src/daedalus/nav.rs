@@ -1,5 +1,5 @@
 use ratatui::{
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, BorderType},
     style::{Style, Color},
     layout::{Layout, Direction, Constraint},
     text::{Line}
@@ -11,7 +11,7 @@ pub type NavItem = (Paragraph<'static>, Line<'static>);
 fn create_nav_item(label: String, color: Color) -> NavItem {
     (Paragraph::new("")
               .centered()
-              .block(Block::new().borders(Borders::ALL ^ Borders::RIGHT))
+              .block(Block::new().borders(Borders::ALL ^ Borders::RIGHT).border_type(BorderType::Rounded))
               .style(Style::default().fg(color)),
     Line::raw(label).style(Style::default().fg(color)))
 }

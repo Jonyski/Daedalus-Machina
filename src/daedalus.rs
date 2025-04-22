@@ -30,7 +30,7 @@ mod command_line;
 use command_line::CommandLine as cl;
 use ratatui::crossterm::event::{self, KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, BorderType},
     style::{Style, Color},
     layout::{Layout, Constraint, Flex, Rect},
     Frame,
@@ -59,7 +59,7 @@ pub struct Daedalus<'a> {
     context: Context,
     active_module: Module,
     last_key: Option<KeyEvent>,
-    command_line: cl<'a>,
+    pub command_line: cl<'a>,
     nav: Vec<nav::NavItem>
 }
 
@@ -99,6 +99,8 @@ impl Daedalus<'_> {
             frame.render_widget(help, menu_layout[3]);
         }
 
+        // rendering the command line
+        self.command_line.update_style();
         frame.render_widget(&self.command_line.text_area, command_line_layout[1]);
     }
 
@@ -142,6 +144,6 @@ pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect 
 
 pub fn get_container<'a>(color: Color) -> Paragraph<'a> {
     Paragraph::new("")
-              .block(Block::new().borders(Borders::ALL))
-              .style(Style::default().fg(color))
+              .block(Block::new().borders(Borders::ALL).border_type(BorderType::Rounded))
+              .style(color)
 }
