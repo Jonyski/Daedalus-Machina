@@ -72,9 +72,8 @@ impl CommandLine<'_> {
 		}
 
 		if key.modifiers != KeyModifiers::SHIFT 
-		   && key.modifiers.bits() != KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
-		   && (key.modifiers != KeyModifiers::CONTROL && key.code != KeyCode::Char('a'))
-		   && (key.modifiers != KeyModifiers::SHIFT && (key.code != KeyCode::Left && key.code != KeyCode::Left)){
+		   && (key.modifiers.bits() != KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits())
+		   && (key.modifiers != KeyModifiers::CONTROL && key.code != KeyCode::Char('a')) {
 			self.text_area.cancel_selection();
 		}
 
@@ -108,7 +107,8 @@ impl CommandLine<'_> {
 			KeyCode::Char('d') => {self.text_area.cancel_selection();},
 			KeyCode::Char('p') => {
 				self.text_area.move_cursor(CursorMove::WordBack);
-				self.text_area.delete_next_word();}
+				self.text_area.delete_next_word();
+			}
 			KeyCode::Delete => {self.text_area.delete_next_word();},
 			KeyCode::Left => {self.text_area.move_cursor(CursorMove::WordBack);},
 			KeyCode::Right => {self.text_area.move_cursor(CursorMove::WordForward);},
@@ -147,8 +147,8 @@ impl CommandLine<'_> {
 		Paragraph::new("  >")
 	}
 
-	pub fn draw(&mut self, frame: &mut Frame, container: Rect) {
-		let enclosure_layout = CommandLine::<'_>::get_command_line_enclosure_layout().split(container);
+	pub fn draw(&mut self, frame: &mut Frame, enclosure: Rect) {
+		let enclosure_layout = CommandLine::<'_>::get_command_line_enclosure_layout().split(enclosure);
 		let layout = CommandLine::<'_>::get_command_line_layout().split(enclosure_layout[1]);
 		self.update_style();
 		frame.render_widget(CommandLine::<'_>::get_icon(), super::center_vertical(layout[1], 1)) ;

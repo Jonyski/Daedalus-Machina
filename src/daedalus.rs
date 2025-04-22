@@ -59,15 +59,7 @@ impl Daedalus<'_> {
         nav::draw(frame, daedalus_layout[0]);
 
         if self.active_module == Module::MENU {
-            let menu_layout = menu::get_menu_layout().split(daedalus_layout[1]);
-            let container = get_container(colors::LIGHT_YELLOW);
-            let title = menu::get_title();
-            let subtitle = menu::get_subtitle();
-            let help = menu::get_help();
-            frame.render_widget(container, daedalus_layout[1]);
-            frame.render_widget(title, menu_layout[1]);
-            frame.render_widget(subtitle, menu_layout[2]);
-            frame.render_widget(help, menu_layout[3]);
+            menu::draw(frame, daedalus_layout.clone())
         }
 
         self.command_line.draw(frame, daedalus_layout[1]);

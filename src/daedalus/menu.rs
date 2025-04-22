@@ -1,9 +1,12 @@
 use super::colors;
+use std::rc::Rc;
 use ratatui::{
     style::{Style, Stylize},
     text::{Line},
     widgets::{Paragraph},
-    layout::{Layout, Direction, Constraint}
+    layout::{Layout, Direction, Constraint},
+    prelude::Rect,
+    Frame
 };
 
 pub fn get_daedalus_layout() -> Layout {
@@ -59,4 +62,16 @@ pub fn get_help<'a>() -> Paragraph<'a> {
     let l2 = Line::raw("q: quit                 ").style(Style::default().fg(colors::GREY_RED));
 
     Paragraph::new(vec![l1, l2, l3, l4, l5, l6, l7, l8]).centered()
+}
+
+pub fn draw(frame: &mut Frame, enclosure: Rc<[Rect]>) {
+    let menu_layout = get_menu_layout().split(enclosure[1]);
+    let container = super::get_container(colors::LIGHT_YELLOW);
+    let title = get_title();
+    let subtitle = get_subtitle();
+    let help = get_help();
+    frame.render_widget(container, enclosure[1]);
+    frame.render_widget(title, menu_layout[1]);
+    frame.render_widget(subtitle, menu_layout[2]);
+    frame.render_widget(help, menu_layout[3]);
 }
