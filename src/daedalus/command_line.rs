@@ -10,7 +10,6 @@ use ratatui::{
 use tui_textarea::{TextArea, CursorMove};
 use std::io;
 
-
 pub struct CommandLine<'a> {
     pub active: bool,
     pub text_area: TextArea<'a>
@@ -24,7 +23,7 @@ impl CommandLine<'_> {
         }
     }
 
-    pub fn get_command_line_enclosure_layout() -> Layout {
+    fn get_command_line_enclosure_layout() -> Layout {
         Layout::default()
                .direction(Direction::Vertical)
                .constraints([
@@ -33,7 +32,7 @@ impl CommandLine<'_> {
                ])
     }
 
-    pub fn get_command_line_layout() -> Layout {
+    fn get_command_line_layout() -> Layout {
         Layout::default()
                .direction(Direction::Horizontal)
                .constraints([
@@ -43,7 +42,7 @@ impl CommandLine<'_> {
                 ])
     }
 
-    pub fn get_command_line<'a>() -> TextArea<'a> {
+    fn get_command_line<'a>() -> TextArea<'a> {
         let block = Block::default()
                           .borders(Borders::ALL)
                           .style(colors::ORANGE)
@@ -117,7 +116,7 @@ impl CommandLine<'_> {
         Ok(())
     }
 
-    pub fn update_style(&mut self) {
+    fn update_style(&mut self) {
         if self.active {
             let block = Block::default()
                               .borders(Borders::ALL)

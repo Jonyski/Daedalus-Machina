@@ -19,7 +19,7 @@ fn create_nav_item(label: String, color: Color) -> NavItem {
     Line::raw(label).style(Style::default().fg(color)))
 }
 
-pub fn get_nav_layout() -> Layout {
+fn get_nav_layout() -> Layout {
     Layout::default()
            .direction(Direction::Vertical)
            .constraints([
@@ -37,7 +37,7 @@ pub fn get_nav_layout() -> Layout {
            ])
 }
 
-pub fn get_nav() -> Vec<NavItem> {
+fn get_nav() -> Vec<NavItem> {
     vec![create_nav_item(String::from("Fichas"), colors::PURPLE),
          create_nav_item(String::from("Dados"), colors::BLUE),
          create_nav_item(String::from("Itens"), colors::CYAN),

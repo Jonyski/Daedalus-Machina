@@ -1,14 +1,16 @@
 mod menu;
 mod nav;
 mod command_line;
-mod colors;
+pub mod colors;
 
 use command_line::CommandLine as cl;
+use crate::character_sheets as cs;
 use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
 use ratatui::{
     widgets::{Block, Borders, Paragraph, BorderType},
     style::{Color},
     layout::{Layout, Constraint, Flex, Rect},
+    prelude::Direction,
     Frame,
 };
 use std::io;
@@ -54,12 +56,14 @@ impl Daedalus<'_> {
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
-        let daedalus_layout = menu::get_daedalus_layout().split(frame.area());
+        let daedalus_layout = get_daedalus_layout().split(frame.area());
 
         nav::draw(frame, daedalus_layout[0]);
 
-        if self.active_module == Module::MENU {
-            menu::draw(frame, daedalus_layout.clone())
+        match self.active_module {
+            Module::MENU => menu::draw(frame, daedalus_layout[1]),
+            Module::SHEET => cs::draw(frame, daedalus_layout[1]),
+            _ => {}
         }
 
         self.command_line.draw(frame, daedalus_layout[1]);
@@ -69,15 +73,16 @@ impl Daedalus<'_> {
         let mut result = io::Result::Ok(());
         if self.command_line.active {
             result = self.command_line.handle_event(key);
-            match key.code {
-                KeyCode::F(1) => {self.active_module = Module::SHEET;},
-                KeyCode::F(2) => {self.active_module = Module::DICE;},
-                KeyCode::F(3) => {self.active_module = Module::ITEM;},
-                KeyCode::F(4) => {self.active_module = Module::NOTES;},
-                KeyCode::F(5) => {self.active_module = Module::WORLD;},
-                _ => {result = Ok(());}
-            }
         } 
+        match key.code {
+            KeyCode::F(1) => {self.active_module = Module::SHEET;},
+            KeyCode::F(2) => {self.active_module = Module::DICE;},
+            KeyCode::F(3) => {self.active_module = Module::ITEM;},
+            KeyCode::F(4) => {self.active_module = Module::NOTES;},
+            KeyCode::F(5) => {self.active_module = Module::WORLD;},
+            KeyCode::F(6) => {self.active_module = Module::MENU;},
+            _ => {result = Ok(());}
+        }
         self.last_key = Some(key);
         result
     }
@@ -91,6 +96,15 @@ impl Daedalus<'_> {
     }
 }
 
+fn get_daedalus_layout() -> Layout {
+    Layout::default()
+           .direction(Direction::Horizontal)
+           .constraints([
+            Constraint::Percentage(10),
+            Constraint::Percentage(90)
+           ])
+}
+
 #[allow(dead_code)]
 pub fn center_horizontal(area: Rect, width: u16) -> Rect {
     let [area] = Layout::horizontal([Constraint::Length(width)])
@@ -99,7 +113,6 @@ pub fn center_horizontal(area: Rect, width: u16) -> Rect {
     area
 }
 
-#[allow(dead_code)]
 pub fn center_vertical(area: Rect, height: u16) -> Rect {
     let [area] = Layout::vertical([Constraint::Length(height)])
         .flex(Flex::Center)

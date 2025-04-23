@@ -1,4 +1,5 @@
-use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+
+use ratatui::crossterm::{self, event::{self, Event, KeyCode, KeyEvent, KeyEventKind}};
 use ratatui::{DefaultTerminal};
 use std::io;
 use crate::daedalus::*;
@@ -6,7 +7,7 @@ use crate::daedalus::*;
 // The Machina is equivalent to the "App" struct in other ratatui projects
 pub struct Machina<'a> {
     should_exit: bool, // when true, the program terminates
-    daedalus: Daedalus<'a>,
+    daedalus: Daedalus<'a>, // the daedalus instance associated with this program
 }
 
 impl Machina<'_> {
@@ -16,6 +17,7 @@ impl Machina<'_> {
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        crossterm::terminal::enable_raw_mode().expect("raw mode enable");
         while !self.should_exit {
             terminal.draw(|frame| self.daedalus.draw(frame))?;
             self.handle_events()?;
