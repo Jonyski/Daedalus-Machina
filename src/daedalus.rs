@@ -5,7 +5,7 @@ pub mod colors;
 
 use command_line::CommandLine as cl;
 use crate::character_sheets as cs;
-use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
+use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers, MouseEvent};
 use ratatui::{
     widgets::{Block, Borders, Paragraph, BorderType},
     style::{Color},
@@ -72,7 +72,7 @@ impl Daedalus<'_> {
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         let mut result = io::Result::Ok(());
         if self.command_line.active {
-            result = self.command_line.handle_event(key);
+            result = self.command_line.handle_key_event(key);
         } 
         match key.code {
             KeyCode::F(1) => {self.active_module = Module::SHEET;},
@@ -85,6 +85,15 @@ impl Daedalus<'_> {
         }
         self.last_key = Some(key);
         result
+    }
+
+    pub fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
+        if self.command_line.mouse_hit(mouse_event) {
+            self.command_line.handle_mouse_event(mouse_event);
+        } //else self.mouse_hit_nav(mouse_event) {
+            //nav::handle_mouse_event(mouse_event);
+        //}
+        Ok(())
     }
 
     #[allow(dead_code)]

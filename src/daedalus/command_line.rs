@@ -1,5 +1,5 @@
 use super::colors;
-use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers};
+use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers, MouseEvent};
 use ratatui::{
     style::{Style, Color},
     widgets::{Block, Borders, BorderType, Paragraph, Padding},
@@ -12,15 +12,26 @@ use std::io;
 
 pub struct CommandLine<'a> {
     pub active: bool,
-    pub text_area: TextArea<'a>
+    pub text_area: TextArea<'a>,
+    hitbox: Rect
 }
 
 impl CommandLine<'_> {
     pub fn init() -> Self {
         Self {
             active: true,
-            text_area: Self::get_command_line()
+            text_area: Self::get_command_line(),
+            hitbox: Rect::default()
         }
+    }
+
+    pub fn draw(&mut self, frame: &mut Frame, enclosure: Rect) {
+        let enclosure_layout = CommandLine::<'_>::get_command_line_enclosure_layout().split(enclosure);
+        let layout = CommandLine::<'_>::get_command_line_layout().split(enclosure_layout[1]);
+        self.update_hitbox(layout[1]);
+        self.update_style();
+        frame.render_widget(CommandLine::<'_>::get_icon(), super::center_vertical(layout[1], 1)) ;
+        frame.render_widget(&self.text_area, layout[1]);
     }
 
     fn get_command_line_enclosure_layout() -> Layout {
@@ -55,7 +66,7 @@ impl CommandLine<'_> {
         command_line
     }
 
-    pub fn handle_event(&mut self, key: KeyEvent) -> io::Result<()> {
+    pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         let result;
         if (self.text_area.selection_range() == None)
            && (key.modifiers.bits() == KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
@@ -116,6 +127,25 @@ impl CommandLine<'_> {
         Ok(())
     }
 
+    pub fn mouse_hit(&self, mouse_event: MouseEvent) -> bool {
+        let left = self.hitbox.x;
+        let right = self.hitbox.x + self.hitbox.width;
+        let top = self.hitbox.y;
+        let bottom = self.hitbox.y + self.hitbox.height;
+
+        if mouse_event.column >= left
+           && mouse_event.column <= right
+           && mouse_event.row >= top
+           && mouse_event.row <= bottom {
+            return true
+        }
+        false
+    }
+
+    pub fn handle_mouse_event(&mut self, mouse_event: MouseEvent) {
+        self.active = true;
+    }
+
     fn update_style(&mut self) {
         if self.active {
             let block = Block::default()
@@ -142,15 +172,11 @@ impl CommandLine<'_> {
         }
     }
 
-    fn get_icon<'a>() -> Paragraph<'a> {
-        Paragraph::new("  >")
+    fn update_hitbox(&mut self, area: Rect) {
+        self.hitbox = area;
     }
 
-    pub fn draw(&mut self, frame: &mut Frame, enclosure: Rect) {
-        let enclosure_layout = CommandLine::<'_>::get_command_line_enclosure_layout().split(enclosure);
-        let layout = CommandLine::<'_>::get_command_line_layout().split(enclosure_layout[1]);
-        self.update_style();
-        frame.render_widget(CommandLine::<'_>::get_icon(), super::center_vertical(layout[1], 1)) ;
-        frame.render_widget(&self.text_area, layout[1]);
+    fn get_icon<'a>() -> Paragraph<'a> {
+        Paragraph::new("  >")
     }
 }

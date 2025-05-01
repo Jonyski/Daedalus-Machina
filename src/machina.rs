@@ -1,5 +1,4 @@
-
-use ratatui::crossterm::{self, event::{self, Event, KeyCode, KeyEvent, KeyEventKind}};
+use ratatui::crossterm::{self, event::{self, Event, KeyCode, KeyEvent, KeyEventKind, EnableMouseCapture, MouseEvent, MouseEventKind, MouseButton}};
 use ratatui::{DefaultTerminal};
 use std::io;
 use crate::daedalus::*;
@@ -17,8 +16,11 @@ impl Machina<'_> {
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        // boilerplate stuff
+        crossterm::execute!(std::io::stdout(), EnableMouseCapture)?; // enables mouse events
         crossterm::terminal::enable_raw_mode().expect("raw mode enable");
         while !self.should_exit {
+            // daedalus
             terminal.draw(|frame| self.daedalus.draw(frame))?;
             self.handle_events()?;
         }
@@ -29,6 +31,9 @@ impl Machina<'_> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 self.handle_key_event(key_event)
+            }
+            Event::Mouse(mouse_event) if mouse_event.kind == MouseEventKind::Down(MouseButton::Left) => {
+                self.handle_mouse_event(mouse_event)
             }
             _ => {}
         };
@@ -45,6 +50,10 @@ impl Machina<'_> {
                 _ => self.daedalus.handle_key_event(key_event).expect("daedalus event not handled")
             }
         }
+    }
+
+    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) {
+        self.daedalus.handle_mouse_event(mouse_event);
     }
 
     fn exit(&mut self) {
