@@ -9,13 +9,14 @@ use ratatui::{
 };
 
 fn get_menu_layout() -> Layout {
+    // divides the screen in 3 important sections
     Layout::default()
            .direction(Direction::Vertical)
            .constraints([
             Constraint::Length(1),
-            Constraint::Length(8),
-            Constraint::Length(2),
-            Constraint::Min(2),
+            Constraint::Length(8), // for the title
+            Constraint::Length(2), // for the subtitle
+            Constraint::Min(2),    // for the help
             Constraint::Length(3)
            ])
 }

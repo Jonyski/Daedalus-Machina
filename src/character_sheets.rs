@@ -9,24 +9,26 @@ use ratatui::{
 };
 
 fn get_outer_layout() -> Layout {
+    // this layout divides the screen in half horizontaly 
     Layout::default()
            .direction(Direction::Horizontal)
            .constraints([
                 Constraint::Length(1),
-                Constraint::Fill(1),
-                Constraint::Fill(1),
+                Constraint::Fill(1), // for the sheet itself
+                Constraint::Fill(1), // for the inventory and notes
                 Constraint::Length(1)
             ])
 }
 
 fn get_inner_layout() -> Layout {
+    // divides the right half in two vertical halves
     Layout::default()
            .direction(Direction::Vertical)
            .constraints([
                 Constraint::Length(1),
-                Constraint::Fill(1),
+                Constraint::Fill(1), // for the inventory
                 Constraint::Length(1),
-                Constraint::Fill(1),
+                Constraint::Fill(1), // for the notes
                 Constraint::Length(3)
             ])
 }

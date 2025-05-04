@@ -39,10 +39,10 @@ enum Module {
 
 #[allow(dead_code)]
 pub struct Daedalus<'a> {
-    context: Context,
-    active_module: Module,
-    last_key: Option<KeyEvent>,
-    pub command_line: cl<'a>,
+    context: Context,           // what is the master doing currently
+    active_module: Module,      // what module is the main one being used
+    last_key: Option<KeyEvent>, // last key pressed (may be useless???)
+    pub command_line: cl<'a>,   // the command line
 }
 
 impl Daedalus<'_> {
@@ -56,16 +56,17 @@ impl Daedalus<'_> {
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
+        // initializing the layout
         let daedalus_layout = get_daedalus_layout().split(frame.area());
-
+        // draw the navigation tabs
         nav::draw(frame, daedalus_layout[0]);
-
+        // draw the active module
         match self.active_module {
             Module::MENU => menu::draw(frame, daedalus_layout[1]),
             Module::SHEET => cs::draw(frame, daedalus_layout[1]),
             _ => {}
         }
-
+        // draw the command line
         self.command_line.draw(frame, daedalus_layout[1]);
     }
 
@@ -75,6 +76,9 @@ impl Daedalus<'_> {
             result = self.command_line.handle_key_event(key);
         } 
         match key.code {
+            // esc ativa a linha de comando
+            KeyCode::Esc => self.command_line.active = !self.command_line.active,
+            // as teclas F mudam de aba
             KeyCode::F(1) => {self.active_module = Module::SHEET;},
             KeyCode::F(2) => {self.active_module = Module::DICE;},
             KeyCode::F(3) => {self.active_module = Module::ITEM;},
@@ -106,6 +110,7 @@ impl Daedalus<'_> {
 }
 
 fn get_daedalus_layout() -> Layout {
+    // 10% navigation and 90% content
     Layout::default()
            .direction(Direction::Horizontal)
            .constraints([
@@ -116,6 +121,7 @@ fn get_daedalus_layout() -> Layout {
 
 #[allow(dead_code)]
 pub fn center_horizontal(area: Rect, width: u16) -> Rect {
+    // generates an area in which a widget gets centered in a container horizontally
     let [area] = Layout::horizontal([Constraint::Length(width)])
         .flex(Flex::Center)
         .areas(area);
@@ -123,6 +129,7 @@ pub fn center_horizontal(area: Rect, width: u16) -> Rect {
 }
 
 pub fn center_vertical(area: Rect, height: u16) -> Rect {
+    // generates an area in which a widget gets centered in a container vertically
     let [area] = Layout::vertical([Constraint::Length(height)])
         .flex(Flex::Center)
         .areas(area);
@@ -130,6 +137,7 @@ pub fn center_vertical(area: Rect, height: u16) -> Rect {
 }
 
 pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
+    // generates an area in which a widget gets centered in a container
     let [area] = Layout::horizontal([horizontal])
         .flex(Flex::Center)
         .areas(area);
@@ -138,6 +146,7 @@ pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect 
 }
 
 pub fn get_container<'a>(color: Color) -> Paragraph<'a> {
+    // generates an empty box (paragraph) with borders of a certain color
     Paragraph::new("")
               .block(Block::new().borders(Borders::ALL).border_type(BorderType::Rounded))
               .style(color)

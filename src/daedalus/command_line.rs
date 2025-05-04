@@ -1,5 +1,11 @@
 use super::colors;
-use ratatui::crossterm::event::{KeyEvent, KeyCode, KeyModifiers, MouseEvent};
+use ratatui::crossterm::event::{
+    KeyEvent,
+    KeyCode,
+    KeyModifiers,
+    MouseEvent,
+    MouseEventKind,
+    MouseButton::{Left, Right}};
 use ratatui::{
     style::{Style, Color},
     widgets::{Block, Borders, BorderType, Paragraph, Padding},
@@ -11,9 +17,9 @@ use tui_textarea::{TextArea, CursorMove};
 use std::io;
 
 pub struct CommandLine<'a> {
-    pub active: bool,
-    pub text_area: TextArea<'a>,
-    hitbox: Rect
+    pub active: bool,            // whether the user is typing in the cl or not
+    pub text_area: TextArea<'a>, // a 3rd party widget for text boxes
+    hitbox: Rect                 // the hitbox for mouse event detection
 }
 
 impl CommandLine<'_> {
@@ -35,6 +41,7 @@ impl CommandLine<'_> {
     }
 
     fn get_command_line_enclosure_layout() -> Layout {
+        // 3 bottom rows are reserved for the command line
         Layout::default()
                .direction(Direction::Vertical)
                .constraints([
@@ -68,12 +75,18 @@ impl CommandLine<'_> {
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         let result;
+
+        // Making sure selections start in the correct conditions:
+        // 1. no text is already selected AND
+        // 2. shift OR ctrl+shift are being pressed
         if (self.text_area.selection_range() == None)
            && (key.modifiers.bits() == KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits()
            || key.modifiers == KeyModifiers::SHIFT) {
             self.text_area.start_selection();
         }
 
+        // If neither ctrl nor ctrl+shift are being pressed, redirect for the normal text input
+        // Otherwise, redirect for the shortcut handler
         if key.modifiers !=  KeyModifiers::CONTROL
            && key.modifiers.bits() != KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits() {
             result = self.handle_text_event(key);
@@ -81,6 +94,9 @@ impl CommandLine<'_> {
             result = self.handle_shortcut_event(key);
         }
 
+        // Disabling selection in the correct condition
+        // 1. neither shift nor ctrl+shift are being pressed AND
+        // 2. the action wasn't a ctrl+a (select all)
         if key.modifiers != KeyModifiers::SHIFT 
            && (key.modifiers.bits() != KeyModifiers::CONTROL.bits() | KeyModifiers::SHIFT.bits())
            && (key.modifiers != KeyModifiers::CONTROL && key.code != KeyCode::Char('a')) {
@@ -92,15 +108,18 @@ impl CommandLine<'_> {
 
     fn handle_text_event(&mut self, key: KeyEvent) -> io::Result<()> {
         match key.code {
+            // text being typed to the cl
             KeyCode::Char(_) => {self.text_area.input(key);},
+            // command being sent for execution
             KeyCode::Enter => {
                 self.text_area.delete_line_by_end();
                 self.text_area.delete_line_by_head();
             },
+            // deleting a character
             KeyCode::Backspace => {self.text_area.delete_char();},
+            // moving through the text
             KeyCode::Left => {self.text_area.move_cursor(CursorMove::Back);},
             KeyCode::Right => {self.text_area.move_cursor(CursorMove::Forward);},
-            KeyCode::Esc => self.active = false,
             _ => return Ok(())
         }
         Ok(())
@@ -116,10 +135,15 @@ impl CommandLine<'_> {
             KeyCode::Char('a') => {self.text_area.select_all();},
             KeyCode::Char('d') => {self.text_area.cancel_selection();},
             KeyCode::Char('p') => {
+                self.text_area.start_selection();
                 self.text_area.move_cursor(CursorMove::WordBack);
-                self.text_area.delete_next_word();
+                self.text_area.delete_char();
+                self.text_area.cancel_selection();
             }
-            KeyCode::Delete => {self.text_area.delete_next_word();},
+            KeyCode::Delete => {
+                self.text_area.cancel_selection();
+                self.text_area.delete_next_word();
+            },
             KeyCode::Left => {self.text_area.move_cursor(CursorMove::WordBack);},
             KeyCode::Right => {self.text_area.move_cursor(CursorMove::WordForward);},
             _ => return Ok(())
@@ -142,8 +166,13 @@ impl CommandLine<'_> {
         false
     }
 
-    pub fn handle_mouse_event(&mut self, mouse_event: MouseEvent) {
-        self.active = true;
+    pub fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
+        match mouse_event.kind {
+            MouseEventKind::Down(Left) => self.active = true,
+            MouseEventKind::Down(Right) => self.active = false,
+            _ => return Ok(())
+        }
+        Ok(())
     }
 
     fn update_style(&mut self) {
